@@ -1,6 +1,7 @@
 #pragma once
 
-#include <array>
+#include <cstddef>
+#include <vector>
 
 template <typename T>
 struct Matrix {
@@ -8,14 +9,14 @@ struct Matrix {
     int sizeX;
     int sizeY;
 
-    Matrix(int x_, int y_) : v(x_ * y_, T{}), sizeX(x_), sizeY(y_) {}
+    Matrix(int x_, int y_) : v(static_cast<std::size_t>(x_ * y_), T{}), sizeX(x_), sizeY(y_) {}
 
     T& operator()(int x_, int y_)  {
-        return v[x_ + y_ * sizeX];
+      return v[static_cast<std::size_t>(x_ + y_ * sizeX)];
     }
 
     const T& operator()(int x_, int y_) const {
-        return v[x_ + y_ * sizeX];
+      return v[static_cast<std::size_t>(x_ + y_ * sizeX)];
     }
 };
 

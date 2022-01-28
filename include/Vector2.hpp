@@ -6,12 +6,12 @@
 template <typename T>
 class Vector2 {
 public:
-    T x;
-    T y;
+    T x{};
+    T y{};
+
+    constexpr Vector2() = default;
 
     constexpr Vector2(T x_, T y_) : x(x_), y(y_) {}
-
-    constexpr Vector2() : x{}, y{} {}
 
     T mag() {
         return std::hypot(x, y);
