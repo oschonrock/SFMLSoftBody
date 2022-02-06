@@ -1,19 +1,19 @@
 #define _USE_MATH_DEFINES
-#include <chrono>
 #include <cmath>
-#include <iostream>
 #include <string>
+#include <chrono>
+#include <iostream>
 
-#include <Matrix.hpp>
-#include <Point.hpp>
-#include <Polygon.hpp>
 #include <SFML/Graphics.hpp>
 #include <Vector2.hpp>
+#include <Matrix.hpp>
+#include <Polygon.hpp>
+#include <Point.hpp>
 
 const double vsScale = 125.0;
 
 sf::Vector2f visualize(const Vec2& v) {
-    return {static_cast<float>(v.x * vsScale), static_cast<float>(v.y * vsScale)};
+    return sf::Vector2f(static_cast<float>(v.x * vsScale), static_cast<float>(v.y * vsScale));
 }
 
 void springHandler(Point& p1, Point& p2, double stableScale) {
@@ -49,7 +49,7 @@ void simFrame(Matrix<Point>& points) {
     }
 }
 
-void displayFps(double Vfps, double Sfps, sf::RenderWindow& window, const sf::Font& font){
+void displayFps(double Vfps, double Sfps, sf::RenderWindow& window, sf::Font font){
     sf::Text text;
     text.setFont(font); // font is a sf::Font
     text.setString(std::to_string(static_cast<int>(Vfps)) + " " + std::to_string(static_cast<int>(Sfps)));
@@ -107,7 +107,7 @@ int main() {
         std::chrono::_V2::system_clock::time_point start = std::chrono::high_resolution_clock::now();
 
         // clear poll events for sfml
-        sf::Event event{};
+        sf::Event event;
         while (window.pollEvent(event)) {
              if (event.type == sf::Event::Closed) window.close();
         }
