@@ -2,6 +2,7 @@
 #include "median.hpp"
 #include <SFML/Window/VideoMode.hpp>
 #include <iostream>
+#include <stdexcept>
 
 double aspect(sf::VideoMode m) { return 1.0 * m.width / m.height; }
 
@@ -15,8 +16,7 @@ std::ostream& operator<<(std::ostream& os, sf::VideoMode m) {
 sf::VideoMode best_video_mode() {
   auto modes = sf::VideoMode::getFullscreenModes();
   if (modes.empty()) {
-    std::cerr << "Error: no suitable video modes found\n";
-    exit(EXIT_FAILURE); // NOLINT thread safety
+    throw std::logic_error("Error: no suitable video modes found");
   }
 
   // std::max_element is probably unnnecessary here, as sf::VideoMode::getFullscreenModes is alredy
@@ -35,9 +35,8 @@ sf::VideoMode best_video_mode() {
                              }),
               modes.end());
 
-  // for (const auto& m : modes) std::cout << m << "\n";
   double med_aspect = median(modes, {}, [](const auto& m) { return aspect(m); });
-  std::cout << "median aspect using std::nth_element = " << med_aspect << "\n";
+  std::cout << "median aspect = " << med_aspect << "\n";
 
   // sf::VideoMode::getFullscreenModes returns "best" first, and std::remove, erase above maintains
   // order, so first = best
@@ -49,9 +48,7 @@ sf::VideoMode best_video_mode() {
       });
 
   if (best_mode_iter == modes.end()) {
-    std::cerr << "Error: no suitable video modes found\n";
-    exit(EXIT_FAILURE); // NOLINT thread safety
+    throw std::logic_error("Error: no suitable video modes found");
   }
   return *best_mode_iter;
 }
-
