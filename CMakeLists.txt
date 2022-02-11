@@ -7,7 +7,7 @@ conan_init(cmake)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-string(APPEND CMAKE_EXE_LINKER_FLAGS " -fuse-ld=lld")
+string(APPEND CMAKE_EXE_LINKER_FLAGS " -fuse-ld=lld -flto")
 string(APPEND CMAKE_SHARED_LINKER_FLAGS " -fuse-ld=lld")
 string(APPEND CMAKE_MODULE_LINKER_FLAGS " -fuse-ld=lld")
 
@@ -31,7 +31,7 @@ string(APPEND CMAKE_CXX_FLAGS_RELWITHDEBINFO " -fsanitize=address,undefined,leak
 if (MSVC)
   add_compile_options(/W4)
 else()
-  add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wextra-semi -Wshadow-field-in-constructor -Wmissing-noreturn -Wunreachable-code-break)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wextra-semi -Wmissing-noreturn -msse4.2)
 endif()
 
 # if we want shared libs for some reason
@@ -42,3 +42,11 @@ add_executable(softbody main.cpp)
 target_include_directories(softbody PRIVATE include)
 target_link_libraries(softbody PRIVATE sfml-graphics sfml-window sfml-system tbb Threads::Threads)
 
+# add_executable(median median.cpp)
+# target_include_directories(median PRIVATE include)
+
+# find_package(benchmark REQUIRED)
+# add_executable(median_bench median_bench.cpp)
+# target_link_libraries(median_bench benchmark::benchmark)
+
+# add_executable(comp comp.cpp)
