@@ -18,7 +18,8 @@ Checks: '*,-fuchsia*,
 -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
 -cppcoreguidelines-pro-type-union-access,
 -altera-unroll-loops,
--altera-id-dependent-backward-branch'
+-altera-id-dependent-backward-branch,
+-Wunused-parameter'
 
 CheckOptions:
   - key:             cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
