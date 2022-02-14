@@ -36,7 +36,6 @@ target_link_libraries(softbody PRIVATE imgui-sfml Threads::Threads)
 # target_include_directories(median PRIVATE include)
 
 add_executable(cr2 cr2.cpp)
-add_executable(reset reset.cpp)
 
 find_package(benchmark REQUIRED)
 add_executable(bench bench.cpp)
