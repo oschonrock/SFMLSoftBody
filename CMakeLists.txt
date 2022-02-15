@@ -12,7 +12,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 string(APPEND CMAKE_CXX_FLAGS_DEBUG          " -fsanitize=address,undefined,leak")
 string(APPEND CMAKE_CXX_FLAGS_RELWITHDEBINFO " -fsanitize=address,undefined,leak")
 
-add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wextra-semi -Wmissing-noreturn -msse4.2)
+add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wextra-semi -Wmissing-noreturn -march=sandybridge)
 
 add_library(imgui INTERFACE)
 target_include_directories(imgui INTERFACE ../imgui-1.87)
@@ -35,11 +35,15 @@ target_link_libraries(softbody PRIVATE imgui-sfml Threads::Threads)
 # add_executable(median median.cpp)
 # target_include_directories(median PRIVATE include)
 
-add_executable(cr2 cr2.cpp)
+# add_executable(cr2 cr2.cpp)
 
 find_package(benchmark REQUIRED)
 add_executable(bench bench.cpp)
 target_link_libraries(bench PRIVATE sfml benchmark::benchmark)
+
+# not working
+# add_executable(bench_poly bench_poly.cpp)
+# target_link_libraries(bench_poly PRIVATE benchmark::benchmark)
 
 # add_executable(so_immutable so_immutable.cpp)
 # target_link_libraries(so_immutable PRIVATE sfml benchmark::benchmark)
