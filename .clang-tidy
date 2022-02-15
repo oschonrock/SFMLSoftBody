@@ -21,7 +21,13 @@ Checks: '*,-fuchsia*,
 -altera-id-dependent-backward-branch,
 -Wunused-parameter,
 <<<<<<< HEAD
+<<<<<<< HEAD
 -bugprone-easily-swappable-parameters'
+=======
+-bugprone-easily-swappable-parameters,
+-google-readability-todo,
+-llvm-header-guard'
+>>>>>>> 6c0657218fa9d0a67a4c2089479ccf7989f1695d
 =======
 -bugprone-easily-swappable-parameters,
 -google-readability-todo,
