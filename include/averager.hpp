@@ -1,4 +1,8 @@
+#pragma once
+#include <concepts>
+
 template <typename T>
+requires std::floating_point<T> || std::integral<T>
 struct averager {
     T sum{};
     T avg{};
