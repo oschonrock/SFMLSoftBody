@@ -1,25 +1,32 @@
 #pragma once
 #include <concepts>
+#include <cstddef>
+#include <iostream>
+#include <type_traits>
+#include <typeinfo>
 
-template <typename T>
-requires std::floating_point<T> || std::integral<T>
-struct averager {
-    T sum{};
-    T avg{};
+template <typename Value, typename Sum = Value,
+          typename Count = std::conditional_t<std::is_signed_v<Value>, int, unsigned>>
+requires std::floating_point<Value> || std::integral<Value>
+struct smoother {
+    Sum   sum_{};
+    Value avg_{};
 
-    unsigned       sample_count = 0;
-    const unsigned max_samples;
+    Count       count_ = 0;
+    const Count time_constant_;
 
-    explicit averager(unsigned max_samples_) : max_samples(max_samples_) {}
+    explicit smoother(Count max_samples_) : time_constant_(max_samples_) {}
 
-    T operator()(T new_value) {
-        if (sample_count != max_samples) {
-            sum += new_value;
-            ++sample_count;
+    Value operator()(Value new_value) {
+        if (count_ != time_constant_) {
+            sum_ += new_value;
+            ++count_;
         } else {
-            sum += new_value - avg;
+            sum_ += new_value - avg_; // correct, and well defined, even with unsigned types
         }
-        avg = sum / sample_count;
-        return avg;
+        // count's signedness has been matched to sum and avg
+        // must accept that, eg float has fewer sf than int, on many architectures
+        avg_ = sum_ / static_cast<Sum>(count_);
+        return avg_;
     }
 };
