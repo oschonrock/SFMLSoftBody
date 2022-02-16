@@ -45,5 +45,10 @@ target_link_libraries(bench PRIVATE sfml benchmark::benchmark)
 # add_executable(bench_poly bench_poly.cpp)
 # target_link_libraries(bench_poly PRIVATE benchmark::benchmark)
 
-# add_executable(so_immutable so_immutable.cpp)
-# target_link_libraries(so_immutable PRIVATE sfml benchmark::benchmark)
+find_package(PkgConfig)
+pkg_search_module(GTEST REQUIRED gtest_main)
+
+add_executable(avg_test avg_test.cpp)
+target_include_directories(avg_test PRIVATE include)
+target_link_libraries(avg_test ${GTEST_LDFLAGS})
+target_compile_options(avg_test PUBLIC ${GTEST_CFLAGS})
