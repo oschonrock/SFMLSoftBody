@@ -6,31 +6,6 @@
 #include <type_traits>
 
 // for testing purposes only
-template <typename Value, typename Count>
-requires std::floating_point<Value> || std::integral<Value>
-void test_against_predicted_step_response(Value pre_step, Value post_step, Count tc,
-                                          Count number_post_step_samples, Value damped_value) {
-
-    // model predicting "approximately exponential damping"
-    auto expected =
-        post_step + (pre_step - post_step) * std::pow((tc - 1.0L) / tc, number_post_step_samples);
-
-    if constexpr (std::is_integral_v<Value>) {
-        auto predicted = static_cast<Value>(std::round(expected));
-        // allow an integer result to be "off-by-one" after rounding
-        // std::abs can't be used here, because:
-        // If std::abs is called with an unsigned integral argument that cannot be converted to int
-        // by integral promotion, the program is ill-formed.
-        EXPECT_TRUE(damped_value - predicted <= Value{1} || predicted - damped_value <= Value{1});
-    } else {
-        auto predicted = static_cast<Value>(expected);
-        // for FP we expect the prediction to be within appropiately scaled epsilon 
-        EXPECT_LT(std::fabs(damped_value - predicted),
-                  std::fabs(pre_step - post_step) * std::numeric_limits<Value>::epsilon());
-    }
-}
-
-// for testing purposes only
 template <typename Value, typename Sum = Value,
           // type switch is required to prevent warnings AND incorrect arithmetic with -ves
           typename Count = std::conditional_t<std::is_signed_v<Value>, int, unsigned>>
@@ -43,12 +18,11 @@ void test_damper(Value pre_step = 100, Value post_step = 0, Count tc = 10) {
 
     // test empty damper
     auto d = damper<Value, Sum, Count>(tc);
-    // std::cerr << "sizeof(damper) = " << sizeof(d) << "\n";
     static_assert(std::is_same_v<decltype(d.current()), Value>);
     EXPECT_EQ(d.current(), Value{});
 
     // tc samples with pre_step value
-    for (auto i = Count{0}; i != tc - 1; ++i) {
+    for (auto i = Count{1}; i <= tc; ++i) {
         auto dv = d(pre_step);
         static_assert(std::is_same_v<decltype(dv), Value>);
         EXPECT_EQ(dv, pre_step); // check at every step that the `damped_value_` is "flat"
@@ -56,10 +30,26 @@ void test_damper(Value pre_step = 100, Value post_step = 0, Count tc = 10) {
     // `damper` is now fully "primed" with pre_step values
 
     // tc further samples of `post_step` values
-    for (auto i = Count{1}; i != tc; ++i) {
+    for (auto i = Count{1}; i <= tc; ++i) {
         auto dv = d(post_step);
+        static_assert(std::is_same_v<decltype(dv), Value>);
+
         // check at every sample that we are matching the exponential decay curve
-        test_against_predicted_step_response(pre_step, post_step, tc, i, dv);
+        // which predicts "approximately exponential damping"
+        auto expected = post_step + (pre_step - post_step) * std::pow((tc - 1.0L) / tc, i);
+
+        if constexpr (std::is_integral_v<Value>) {
+            auto predicted = static_cast<Value>(std::round(expected));
+            // allow an integer result to be "off-by-one" after rounding
+            // std::abs can't be used here, because programm would be ill-formed for some types
+            EXPECT_TRUE(dv - predicted == Value{0} || dv - predicted == Value{1} ||
+                        predicted - dv == Value{1});
+        } else {
+            auto predicted = static_cast<Value>(expected);
+            // for FP we expect the prediction to be within appropiately scaled epsilon
+            EXPECT_LT(std::fabs(dv - predicted),
+                      std::fabs(pre_step - post_step) * std::numeric_limits<Value>::epsilon());
+        }
     }
 }
 
