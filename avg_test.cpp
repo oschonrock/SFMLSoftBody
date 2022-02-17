@@ -1,12 +1,9 @@
+#include "damper.hpp"
 #include "gtest/gtest.h"
 #include <cmath>
 #include <concepts>
-#include <cstddef>
-#include <cstdint>
-#include <iostream>
 #include <limits>
 #include <type_traits>
-#include "damper.hpp"
 
 // for testing purposes only
 template <typename Value, typename Count>
@@ -20,9 +17,14 @@ void test_against_predicted_step_response(Value pre_step, Value post_step, Count
 
     if constexpr (std::is_integral_v<Value>) {
         auto predicted = static_cast<Value>(std::round(expected));
-        EXPECT_EQ(damped_value, predicted);
+        // allow an integer result to be "off-by-one" after rounding
+        // std::abs can't be used here, because:
+        // If std::abs is called with an unsigned integral argument that cannot be converted to int
+        // by integral promotion, the program is ill-formed.
+        EXPECT_TRUE(damped_value - predicted <= Value{1} || predicted - damped_value <= Value{1});
     } else {
         auto predicted = static_cast<Value>(expected);
+        // for FP we expect the prediction to be within appropiately scaled epsilon 
         EXPECT_LT(std::fabs(damped_value - predicted),
                   std::fabs(pre_step - post_step) * std::numeric_limits<Value>::epsilon());
     }
@@ -45,22 +47,20 @@ void test_damper(Value pre_step = 100, Value post_step = 0, Count tc = 10) {
     static_assert(std::is_same_v<decltype(d.current()), Value>);
     EXPECT_EQ(d.current(), Value{});
 
-    // first sample
-    auto dv = d(pre_step);
-    static_assert(std::is_same_v<decltype(dv), Value>);
-    EXPECT_EQ(dv, pre_step);
+    // tc samples with pre_step value
+    for (auto i = Count{0}; i != tc - 1; ++i) {
+        auto dv = d(pre_step);
+        static_assert(std::is_same_v<decltype(dv), Value>);
+        EXPECT_EQ(dv, pre_step); // check at every step that the `damped_value_` is "flat"
+    }
+    // `damper` is now fully "primed" with pre_step values
 
-    // tc - 1 further samples with pre_step value
-    for (auto i = Count{0}; i != tc - 1; ++i) d(pre_step);
-    EXPECT_EQ(dv, pre_step); // Now fully "primed" with pre_step values
-
-    // first sample with post_step value
-    dv = d(post_step);
-    test_against_predicted_step_response(pre_step, post_step, tc, Count{1}, dv);
-
-    // tc - 1 further samples of post_step values
-    for (auto i = Count{0}; i != tc - 1; ++i) dv = d(post_step);
-    test_against_predicted_step_response(pre_step, post_step, tc, tc, dv);
+    // tc further samples of `post_step` values
+    for (auto i = Count{1}; i != tc; ++i) {
+        auto dv = d(post_step);
+        // check at every sample that we are matching the exponential decay curve
+        test_against_predicted_step_response(pre_step, post_step, tc, i, dv);
+    }
 }
 
 // signed integer types
@@ -86,12 +86,12 @@ TEST(damper, float) { test_damper<float>(); }
 TEST(damper, double) { test_damper<double>(); }
 TEST(damper, long_double) { test_damper<long double>(); }
 
-// FP types with negatives
+// FP types with a step from negative to positive
 TEST(damper, float_negstep) { test_damper<float>(-100.0, 100.0); }
 TEST(damper, double_negstep) { test_damper<double>(-100.0, 100.0); }
 TEST(damper, long_double_negstep) { test_damper<long double>(-100.0, 100.0); }
 
-// tiny integer types (one usecase is microcontroller analog input damping)
+// tiny integer types (one use case is microcontroller analog input damping)
 TEST(damper, uint8_t__uint16_t) { test_damper<std::uint8_t, std::uint16_t>(); }
 TEST(damper, uint8_t__uint16_t__uint8_t) {
     test_damper<std::uint8_t, std::uint16_t, std::uint8_t>();
@@ -99,11 +99,11 @@ TEST(damper, uint8_t__uint16_t__uint8_t) {
 
 // this test fails, because the sum overflows
 // I have tried to algebraically eliminate the sum, but it seems that, for integer arithmetic,
-// we always need at least a temporary result which is (sample avg * time_constant) in size
+// we always need at least a temporary result which can hold sample avg * time_constant
 // TEST(damper, uint8_t__uint8_t__uint8_t) { test_damper<std::uint8_t, std::uint8_t,
 // std::uint8_t>(); }
 
-// however, it is still a valid set of template params when avg * tc is small
+// however, it is still a valid set of template params when sample avg * tc is small
 TEST(damper, uint8_t__uint8_t__uint8_t_small_values) {
     test_damper<std::uint8_t, std::uint8_t, std::uint8_t>(0, 40, 5);
 }
