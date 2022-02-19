@@ -12,7 +12,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 string(APPEND CMAKE_CXX_FLAGS_DEBUG          " -fsanitize=address,undefined,leak")
 string(APPEND CMAKE_CXX_FLAGS_RELWITHDEBINFO " -fsanitize=address,undefined,leak")
 
-add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wextra-semi -Wmissing-noreturn -march=sandybridge)
+add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wextra-semi -Wmissing-noreturn -Wconversion -Wsign-conversion -march=sandybridge)
 
 add_library(imgui INTERFACE)
 target_include_directories(imgui INTERFACE ../imgui-1.87)
@@ -52,3 +52,5 @@ add_executable(avg_test avg_test.cpp)
 target_include_directories(avg_test PRIVATE include)
 target_link_libraries(avg_test ${GTEST_LDFLAGS})
 target_compile_options(avg_test PUBLIC ${GTEST_CFLAGS})
+
+add_executable(promotion promotion.cpp)

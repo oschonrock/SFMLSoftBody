@@ -2,19 +2,22 @@
 #include "gtest/gtest.h"
 #include <cmath>
 #include <concepts>
+#include <cstdint>
 #include <limits>
+#include <string>
 #include <type_traits>
 
 // for testing purposes only
 template <typename Value, typename Sum = Value,
-          // type switch is required to prevent warnings AND incorrect arithmetic with -ves
-          typename Count = std::conditional_t<std::is_signed_v<Value>, int, unsigned>>
-requires std::floating_point<Value> || std::integral<Value>
+          typename Count = std::conditional_t<std::is_signed_v<Sum>, short, unsigned short>>
 void test_damper(Value pre_step = 100, Value post_step = 0, Count tc = 10) {
 
     // modelling a step response from Value{pre_step} down to Value{post_step} after tc samples
-    // expecting flat Value{100} and then "approximately exponential decay" towards Value{0}
-    // `tc` is aprox equiv to the "time constant" in exponential damping
+    // expecting flat Value{100}
+    // then we feed another tc samples at the pre_step value to ensure "main branch" of `damper`
+    // continues to return a flat profile
+    // Then we start feeding `post_step` values and expect "approximately exponential decay" towards
+    // Value{0}. `tc` is aprox equiv to the "time constant" in exponential damping
 
     // test empty damper
     auto d = damper<Value, Sum, Count>(tc);
@@ -24,15 +27,25 @@ void test_damper(Value pre_step = 100, Value post_step = 0, Count tc = 10) {
     // tc samples with pre_step value
     for (auto i = Count{1}; i <= tc; ++i) {
         auto dv = d(pre_step);
-        static_assert(std::is_same_v<decltype(dv), Value>);
+        SCOPED_TRACE("Stage 1: feeding " + std::to_string(i) + "th value of " +
+                     std::to_string(pre_step));
         EXPECT_EQ(dv, pre_step); // check at every step that the `damped_value_` is "flat"
     }
     // `damper` is now fully "primed" with pre_step values
 
+    // continue to push another tc pre_step values to ensure the output doesn't change
+    for (auto i = Count{1}; i <= tc; ++i) {
+        auto dv = d(pre_step);
+        SCOPED_TRACE("Stage 2: feeding " + std::to_string(i) + "th value of " +
+                     std::to_string(pre_step));
+        EXPECT_EQ(dv, pre_step); // check at every step that the `damped_value_` is "flat"
+    }
+
     // tc further samples of `post_step` values
     for (auto i = Count{1}; i <= tc; ++i) {
         auto dv = d(post_step);
-        static_assert(std::is_same_v<decltype(dv), Value>);
+        SCOPED_TRACE("Stage 3: feeding " + std::to_string(i) + "th value of " +
+                     std::to_string(post_step));
 
         // check at every sample that we are matching the exponential decay curve
         // which predicts "approximately exponential damping"
@@ -53,47 +66,50 @@ void test_damper(Value pre_step = 100, Value post_step = 0, Count tc = 10) {
     }
 }
 
+
 // signed integer types
-TEST(damper, short) { test_damper<short>(); }
-TEST(damper, int) { test_damper<int>(); }
-TEST(damper, long) { test_damper<long>(); }
-TEST(damper, long_long) { test_damper<long long>(); }
+TEST(Damper, Short) { test_damper<short>(); }
+TEST(Damper, Int) { test_damper<int>(); }
+TEST(Damper, Long) { test_damper<long>(); }
+TEST(Damper, LongLong) { test_damper<long long>(); }
 
 // signed integer types with a step from negative to positive
-TEST(damper, short_negstep) { test_damper<short>(-100, 100); }
-TEST(damper, int_negstep) { test_damper<int>(-100, 100); }
-TEST(damper, long_negstep) { test_damper<long>(-100, 100); }
-TEST(damper, long_long_negstep) { test_damper<long long>(-100, 100); }
+TEST(Damper, ShortNegstep) { test_damper<short>(-100, 100); }
+TEST(Damper, IntNegstep) { test_damper<int>(-100, 100); }
+TEST(Damper, LongNegstep) { test_damper<long>(-100, 100); }
+TEST(Damper, LongLongNegstep) { test_damper<long long>(-100, 100); }
 
 // unsigned integer types
-TEST(damper, unsigned_short) { test_damper<unsigned short>(); }
-TEST(damper, unsigned) { test_damper<unsigned>(); }
-TEST(damper, unsigned_long) { test_damper<unsigned long>(); }
-TEST(damper, unsigned_long_long) { test_damper<unsigned long long>(); }
+TEST(Damper, UnsignedShort) { test_damper<unsigned short>(); }
+TEST(Damper, Unsigned) { test_damper<int>(-100, 100); }
+TEST(Damper, UnsignedLong) { test_damper<unsigned long>(); }
+TEST(Damper, UnsignedLongLong) { test_damper<unsigned long long>(); }
 
 // FP types
-TEST(damper, float) { test_damper<float>(); }
-TEST(damper, double) { test_damper<double>(); }
-TEST(damper, long_double) { test_damper<long double>(); }
+TEST(Damper, Float) { test_damper<float>(); }
+TEST(Damper, Double) { test_damper<double>(); }
+TEST(Damper, LongDouble) { test_damper<long double>(); }
 
 // FP types with a step from negative to positive
-TEST(damper, float_negstep) { test_damper<float>(-100.0, 100.0); }
-TEST(damper, double_negstep) { test_damper<double>(-100.0, 100.0); }
-TEST(damper, long_double_negstep) { test_damper<long double>(-100.0, 100.0); }
+TEST(Damper, FloatNegstep) { test_damper<float>(-100.0, 100.0); }
+TEST(Damper, DoubleNegstep) { test_damper<double>(-100.0, 100.0); }
+TEST(Damper, LongDoubleNegstep) { test_damper<long double>(-100.0, 100.0); }
 
 // tiny integer types (one use case is microcontroller analog input damping)
-TEST(damper, uint8_t__uint16_t) { test_damper<std::uint8_t, std::uint16_t>(); }
-TEST(damper, uint8_t__uint16_t__uint8_t) {
-    test_damper<std::uint8_t, std::uint16_t, std::uint8_t>();
-}
+TEST(Damper, Uint8Uint16) { test_damper<std::uint8_t, std::uint16_t>(); }
+TEST(Damper, Int8Int16) { test_damper<std::int8_t, std::int16_t>(); }
 
 // this test fails, because the sum overflows
 // I have tried to algebraically eliminate the sum, but it seems that, for integer arithmetic,
 // we always need at least a temporary result which can hold sample avg * time_constant
-// TEST(damper, uint8_t__uint8_t__uint8_t) { test_damper<std::uint8_t, std::uint8_t,
-// std::uint8_t>(); }
+// TEST(damper, uint8_t__uint8_t__uint8_t) { test_damper<std::uint8_t, std::uint8_t, std::uint8_t>(); }
 
 // however, it is still a valid set of template params when sample avg * tc is small
-TEST(damper, uint8_t__uint8_t__uint8_t_small_values) {
+TEST(Damper, Uint8Uint8SmallValues) {
     test_damper<std::uint8_t, std::uint8_t, std::uint8_t>(0, 40, 5);
 }
+
+TEST(Damper, Int8Int8Int8Negstep) { test_damper<std::int8_t, std::int8_t, std::int8_t>(-10, 10, 10); }
+TEST(Damper, IntIntNegstep) { test_damper<int, int>(-100'000, 100'000, 10); }
+TEST(Damper, Int8Int16Negstep) { test_damper<std::int8_t, std::int16_t>(-10, 10, short(10)); }
+
