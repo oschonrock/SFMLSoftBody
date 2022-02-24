@@ -3,8 +3,6 @@ project(SoftBody)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-string(APPEND CMAKE_EXE_LINKER_FLAGS " ")
-
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -12,45 +10,41 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 string(APPEND CMAKE_CXX_FLAGS_DEBUG          " -fsanitize=address,undefined,leak")
 string(APPEND CMAKE_CXX_FLAGS_RELWITHDEBINFO " -fsanitize=address,undefined,leak")
 
-add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wextra-semi -Wmissing-noreturn -Wconversion -Wsign-conversion -march=sandybridge)
+# set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 
-add_library(imgui INTERFACE)
-target_include_directories(imgui INTERFACE ../imgui-1.87)
+add_subdirectory(SFML)
 
 add_library(sfml INTERFACE)
-target_include_directories(sfml INTERFACE ../SFML/include)
-target_link_directories(sfml INTERFACE ../SFML/build/lib)
-target_link_libraries(sfml INTERFACE sfml-graphics sfml-window sfml-system)
+target_include_directories(sfml INTERFACE SFML/include)
+target_link_directories(sfml INTERFACE SFML/build/lib)
+target_link_libraries(sfml INTERFACE sfml-graphics sfml-window sfml-system Threads::Threads)
+
+# imgui doesn't do cmake and doesn't need compiling
+add_library(imgui INTERFACE)
+target_include_directories(imgui INTERFACE imgui)
+
+set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
+set(IMGUI_SFML_FIND_SFML OFF)
+add_subdirectory(imgui-sfml)
 
 add_library(imgui-sfml INTERFACE)
-target_include_directories(imgui-sfml INTERFACE ../imgui-sfml-2.5)
-target_link_directories(imgui-sfml INTERFACE ../imgui-sfml-2.5/build)
+target_include_directories(imgui-sfml INTERFACE imgui-sfml)
+target_link_directories(imgui-sfml INTERFACE imgui-sfml/build)
 target_link_libraries(imgui-sfml INTERFACE ImGui-SFML sfml imgui)
 
 find_package(Threads REQUIRED)
-add_executable(softbody main.cpp)
+add_executable(softbody main.cpp include/video.cpp)
 target_include_directories(softbody PRIVATE include)
-target_link_libraries(softbody PRIVATE imgui-sfml Threads::Threads)
+target_link_libraries(softbody PRIVATE imgui-sfml)
+target_compile_options(softbody PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Wextra-semi
+  -Wmissing-noreturn -Wconversion -Wsign-conversion -march=sandybridge)
 
-# add_executable(median median.cpp)
-# target_include_directories(median PRIVATE include)
+# find_package(benchmark REQUIRED)
 
-# add_executable(cr2 cr2.cpp)
+# find_package(PkgConfig)
+# pkg_search_module(GTEST REQUIRED gtest_main)
+# add_executable(avg_test avg_test.cpp)
+# target_include_directories(avg_test PRIVATE include)
+# target_link_libraries(avg_test ${GTEST_LDFLAGS})
+# target_compile_options(avg_test PUBLIC ${GTEST_CFLAGS})
 
-find_package(benchmark REQUIRED)
-add_executable(bench bench.cpp)
-target_link_libraries(bench PRIVATE sfml benchmark::benchmark)
-
-# not working
-# add_executable(bench_poly bench_poly.cpp)
-# target_link_libraries(bench_poly PRIVATE benchmark::benchmark)
-
-find_package(PkgConfig)
-pkg_search_module(GTEST REQUIRED gtest_main)
-
-add_executable(avg_test avg_test.cpp)
-target_include_directories(avg_test PRIVATE include)
-target_link_libraries(avg_test ${GTEST_LDFLAGS})
-target_compile_options(avg_test PUBLIC ${GTEST_CFLAGS})
-
-add_executable(promotion promotion.cpp)

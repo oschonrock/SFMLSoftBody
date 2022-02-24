@@ -1,3 +1,12 @@
 [submodule "cmake-scripts"]
 	path = cmake-scripts
 	url = https://github.com/oschonrock/cmake-scripts.git
+[submodule "SFML"]
+	path = SFML
+	url = https://github.com/SFML/SFML.git
+[submodule "imgui-sfml"]
+	path = imgui-sfml
+	url = https://github.com/eliasdaler/imgui-sfml.git
+[submodule "imgui"]
+	path = imgui
+	url = https://github.com/ocornut/imgui.git
