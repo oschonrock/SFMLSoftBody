@@ -43,8 +43,13 @@ else()
   set(STATIC_OPTIONS "")
 endif()
 target_link_libraries(softbody PRIVATE imgui-sfml ${STATIC_OPTIONS})
-target_compile_options(softbody PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Wextra-semi
-  -Wmissing-noreturn -Wconversion -Wsign-conversion -march=sandybridge)
+if (MSVC)
+  set(SOFTBODY_COMPILE_OPTIONS "/W4")
+else()
+  set(SOFTBODY_COMPILE_OPTIONS "-Wall -Wextra -Wpedantic -Wshadow -Wextra-semi -Wmissing-noreturn -Wconversion -Wsign-conversion")
+endif()
+message("COMPILE_OPTONS=" ${SOFTBODY_COMPILE_OPTIONS})
+target_compile_options(softbody PRIVATE ${SOFTBODY_COMPILE_OPTIONS})
 
 # find_package(benchmark REQUIRED)
 
