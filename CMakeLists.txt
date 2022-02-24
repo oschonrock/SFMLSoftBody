@@ -33,7 +33,7 @@ target_link_directories(imgui-sfml INTERFACE imgui-sfml/build)
 target_link_libraries(imgui-sfml INTERFACE ImGui-SFML sfml imgui)
 
 find_package(Threads REQUIRED)
-add_executable(softbody main.cpp include/video.cpp)
+add_executable(softbody main.cpp include/video.cpp include/arial.cpp)
 target_include_directories(softbody PRIVATE include)
 if (WIN32)
   # -static removes dependencies on libc.dll and libstdc++.dll winthread.dll on windows
