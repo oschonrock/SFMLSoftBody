@@ -7,10 +7,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-string(APPEND CMAKE_CXX_FLAGS_DEBUG          " -fsanitize=address,undefined,leak")
-string(APPEND CMAKE_CXX_FLAGS_RELWITHDEBINFO " -fsanitize=address,undefined,leak")
-
-# set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+if (MSVC)
+  set(PROJECT_COMPILE_OPTIONS "/W4")
+else()
+  set(PROJECT_COMPILE_OPTIONS "-Wall -Wextra -Wpedantic -Wshadow -Wextra-semi -Wmissing-noreturn -Wconversion -Wsign-conversion")
+  string(APPEND CMAKE_CXX_FLAGS_DEBUG          " -fsanitize=address,undefined,leak")
+  string(APPEND CMAKE_CXX_FLAGS_RELWITHDEBINFO " -fsanitize=address,undefined,leak")
+endif()
 
 add_subdirectory(SFML)
 
@@ -36,20 +39,14 @@ find_package(Threads REQUIRED)
 add_executable(softbody main.cpp include/video.cpp include/arial.cpp)
 target_include_directories(softbody PRIVATE include)
 if (WIN32)
-  # -static removes dependencies on libc.dll and libstdc++.dll winthread.dll on windows
-  set(STATIC_OPTIONS "-static")
+  # -static removes dependencies on libgcc.dll, libstdc++.dll and winthread.dll on windows
+  set(PROJECT_STATIC_OPTIONS "-static")
 else()
   # on linux there is not much point being statically linked
-  set(STATIC_OPTIONS "")
+  set(PROJECT_STATIC_OPTIONS "")
 endif()
-target_link_libraries(softbody PRIVATE imgui-sfml ${STATIC_OPTIONS})
-if (MSVC)
-  set(SOFTBODY_COMPILE_OPTIONS "/W4")
-else()
-  set(SOFTBODY_COMPILE_OPTIONS "-Wall -Wextra -Wpedantic -Wshadow -Wextra-semi -Wmissing-noreturn -Wconversion -Wsign-conversion")
-endif()
-message("COMPILE_OPTONS=" ${SOFTBODY_COMPILE_OPTIONS})
-target_compile_options(softbody PRIVATE ${SOFTBODY_COMPILE_OPTIONS})
+target_link_libraries(softbody PRIVATE imgui-sfml ${PROJECT_STATIC_OPTIONS})
+target_compile_options(softbody PRIVATE ${PROJECT_COMPILE_OPTIONS})
 
 # find_package(benchmark REQUIRED)
 
