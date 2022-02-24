@@ -35,7 +35,8 @@ target_link_libraries(imgui-sfml INTERFACE ImGui-SFML sfml imgui)
 find_package(Threads REQUIRED)
 add_executable(softbody main.cpp include/video.cpp)
 target_include_directories(softbody PRIVATE include)
-target_link_libraries(softbody PRIVATE imgui-sfml)
+# -static removes dependencies on libc and libstdc++ (and winthread on windows)
+target_link_libraries(softbody PRIVATE imgui-sfml -static)
 target_compile_options(softbody PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Wextra-semi
   -Wmissing-noreturn -Wconversion -Wsign-conversion -march=sandybridge)
 
