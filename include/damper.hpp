@@ -6,36 +6,50 @@
 #include <stdexcept>
 #include <type_traits>
 
+template <typename Value, typename Sum, typename Count>
+concept Averageable = requires(Value v, Sum s, Count c) {
+    {s + v} -> std::convertible_to<Sum>;
+    {s / c} -> std::convertible_to<Value>;
+};
+
 // Dampens a "noisy" value using "approx exponential damping".
 // Submit samples using `operator()`, which returns the damped value.
 // MUST choose a SUM type which can hold: sample avg * time_constant
 template <typename Value, typename Sum = Value,
           typename Count = std::conditional_t<std::is_signed_v<Sum>, short, unsigned short>>
-requires ((std::floating_point<Value> || std::integral<Value>) &&
-          (std::floating_point<Sum> || std::integral<Sum>)
-          && std::integral<Count>)
+requires(((std::floating_point<Value> || std::integral<Value>) &&
+          (std::floating_point<Sum> || std::integral<Sum>) &&
+          std::integral<Count>) || Averageable<Value, Sum, Count>)
 class damper {
   public:
-    // having given the user a lot of choice on types, we now apply some fairly
-    // strict rules to check their choices were sensible
-    static_assert(std::is_signed_v<Value> == std::is_signed_v<Sum>,
-                  "Value and Sum types must have the same signedness");
-
-    static_assert(std::is_signed_v<Sum> == std::is_signed_v<Count>,
-                  "Sum and Count types must have the same signedness");
-
-    static_assert(std::is_floating_point_v<Value> == std::is_floating_point_v<Sum>,
-                  "Sum and Value types must both be floating point or both be integral.");
-
-    static_assert(sizeof(Sum) >= sizeof(Value), "Sum type should be at least as big as Value type");
-    static_assert(sizeof(Sum) >= sizeof(Count), "Sum type should be at least as big as Count type");
-
     explicit damper(Count time_constant) : time_constant_(time_constant) {
+        // having given the user a lot of choice on types, we now apply some fairly
+        // strict rules to check their choices were sensible
+        // but only for the builtin types, for user defined types the user
+        // must know what they are doing or put up with longer errors to decipher
+        if constexpr (std::floating_point<Value> || std::integral<Value>) {
+            static_assert(std::is_signed_v<Value> == std::is_signed_v<Sum>,
+                          "Value and Sum types must have the same signedness");
+
+            static_assert(std::is_signed_v<Sum> == std::is_signed_v<Count>,
+                          "Sum and Count types must have the same signedness");
+
+            static_assert(std::is_floating_point_v<Value> == std::is_floating_point_v<Sum>,
+                          "Sum and Value types must both be floating point or both be integral.");
+
+            static_assert(sizeof(Sum) >= sizeof(Value),
+                          "Sum type should be at least as big as Value type");
+            static_assert(sizeof(Sum) >= sizeof(Count),
+                          "Sum type should be at least as big as Count type");
+        }
+
         if (time_constant <= 0) throw std::invalid_argument("damper needs positive time constant");
     }
 
     Value operator()(Value sample) noexcept {
-        if (std::isnan(sample)) return damped_value_; // ignore it
+        if constexpr (std::floating_point<Value>) {
+            if (std::isnan(sample)) return damped_value_; // ignore it
+        }
 
         if (count_ != time_constant_) {
             // branch avoids distortions for the first time_constant samples

@@ -17,6 +17,8 @@ else()
   string(APPEND CMAKE_CXX_FLAGS_RELWITHDEBINFO " -fsanitize=address,undefined,leak")
 endif()
 
+set(SFML_BUILD_AUDIO OFF)
+set(SFML_BUILD_NETWORK OFF)
 add_subdirectory(SFML)
 
 add_library(sfml INTERFACE)
@@ -52,10 +54,10 @@ target_compile_options(softbody PRIVATE ${PROJECT_COMPILE_OPTIONS})
 
 # find_package(benchmark REQUIRED)
 
-# find_package(PkgConfig)
-# pkg_search_module(GTEST REQUIRED gtest_main)
-# add_executable(avg_test avg_test.cpp)
-# target_include_directories(avg_test PRIVATE include)
-# target_link_libraries(avg_test ${GTEST_LDFLAGS})
-# target_compile_options(avg_test PUBLIC ${GTEST_CFLAGS})
+find_package(PkgConfig)
+pkg_search_module(GTEST REQUIRED gtest_main)
+add_executable(avg_test avg_test.cpp)
+target_include_directories(avg_test PRIVATE include)
+target_link_libraries(avg_test ${GTEST_LDFLAGS})
+target_compile_options(avg_test PUBLIC ${GTEST_CFLAGS})
 

@@ -1,3 +1,4 @@
+#include "Vector2.hpp"
 #include "damper.hpp"
 #include "gtest/gtest.h"
 #include <cmath>
@@ -66,6 +67,18 @@ void test_damper(Value pre_step = 100, Value post_step = 0, Count tc = 10) {
     }
 }
 
+// User defined types
+TEST(Damper, Vec2) {
+    auto d  = damper<Vec2>(4);
+    auto dv = d({1, 0});
+    EXPECT_EQ(dv, Vec2(1, 0));
+    dv = d({-1, 0});
+    EXPECT_EQ(dv, Vec2(0, 0));
+    dv = d({0, 1});
+    EXPECT_EQ(dv, Vec2(0, 1.0 / 3));
+    dv = d({0, -1.0});
+    EXPECT_EQ(dv, Vec2(0, 0));
+}
 
 // signed integer types
 TEST(Damper, Short) { test_damper<short>(); }
@@ -102,14 +115,16 @@ TEST(Damper, Int8Int16) { test_damper<std::int8_t, std::int16_t>(); }
 // this test fails, because the sum overflows
 // I have tried to algebraically eliminate the sum, but it seems that, for integer arithmetic,
 // we always need at least a temporary result which can hold sample avg * time_constant
-// TEST(damper, uint8_t__uint8_t__uint8_t) { test_damper<std::uint8_t, std::uint8_t, std::uint8_t>(); }
+// TEST(damper, uint8_t__uint8_t__uint8_t) { test_damper<std::uint8_t, std::uint8_t,
+// std::uint8_t>(); }
 
 // however, it is still a valid set of template params when sample avg * tc is small
 TEST(Damper, Uint8Uint8SmallValues) {
     test_damper<std::uint8_t, std::uint8_t, std::uint8_t>(0, 40, 5);
 }
 
-TEST(Damper, Int8Int8Int8Negstep) { test_damper<std::int8_t, std::int8_t, std::int8_t>(-10, 10, 10); }
+TEST(Damper, Int8Int8Int8Negstep) {
+    test_damper<std::int8_t, std::int8_t, std::int8_t>(-10, 10, 10);
+}
 TEST(Damper, IntIntNegstep) { test_damper<int, int>(-100'000, 100'000, 10); }
 TEST(Damper, Int8Int16Negstep) { test_damper<std::int8_t, std::int16_t>(-10, 10, short(10)); }
-
