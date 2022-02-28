@@ -2,6 +2,7 @@
 
 #include <SFML/Window/VideoMode.hpp>
 #include <iostream>
+#include <ostream>
 #include <stdexcept>
 
 double aspect(sf::VideoMode m);
