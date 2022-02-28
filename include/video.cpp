@@ -1,5 +1,9 @@
 #include "video.hpp"
+#include "SFML/Window/VideoMode.hpp"
 #include "median.hpp"
+#include <cstdlib>
+#include <ostream>
+#include <ranges>
 
 double aspect(sf::VideoMode m) { return 1.0 * m.width / m.height; }
 
@@ -17,11 +21,7 @@ sf::VideoMode best_video_mode() {
     // std::max_element is probably unnnecessary here, as sf::VideoMode::getFullscreenModes is
     // alredy sorted by bpp first so modes[0].bitsPerPixel; would probably suffice
     unsigned max_bits_per_pixel =
-        std::max_element(modes.begin(), modes.end(),
-                         [](const sf::VideoMode& a, const sf::VideoMode& b) {
-                             return a.bitsPerPixel < b.bitsPerPixel;
-                         })
-            ->bitsPerPixel;
+        std::ranges::max_element(modes, {}, &sf::VideoMode::bitsPerPixel)->bitsPerPixel;
 
     // remove all "lower bpp" modes
     modes.erase(std::remove_if(modes.begin(), modes.end(),
@@ -47,4 +47,3 @@ sf::VideoMode best_video_mode() {
     }
     return *best_mode_iter;
 }
-
