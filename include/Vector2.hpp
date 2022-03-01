@@ -24,6 +24,8 @@ class Vector2 {
     Vector2& operator/=(double scale) { x /= scale; y /= scale; return *this; }
     // clang-format on
 
+    bool operator==(const Vector2& rhs) const = default;
+    
     friend Vector2 operator+(Vector2 lhs, const Vector2& rhs) { return lhs += rhs; }
     friend Vector2 operator-(Vector2 lhs, const Vector2& rhs) { return lhs -= rhs; }
     friend Vector2 operator*(Vector2 lhs, double scale) { return lhs *= scale; }
@@ -37,3 +39,4 @@ class Vector2 {
 
 using Vec2  = Vector2<double>;
 using Vec2I = Vector2<int>;
+using Vec2U = Vector2<unsigned>;

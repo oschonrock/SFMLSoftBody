@@ -1,9 +1,9 @@
 #include "Vector2.hpp"
 #include "damper.hpp"
-#include "gtest/gtest.h"
 #include <cmath>
 #include <concepts>
 #include <cstdint>
+#include "gtest/gtest.h"
 #include <limits>
 #include <string>
 #include <type_traits>
@@ -11,7 +11,7 @@
 // for testing purposes only
 template <typename Value, typename Sum = Value,
           typename Count = std::conditional_t<std::is_signed_v<Sum>, short, unsigned short>>
-void test_damper(Value pre_step = 100, Value post_step = 0, Count tc = 10) {
+void test_damper(Value pre_step = 100, Value post_step = 0, Count tc = 10) { // NOLINT Complexity
 
     // modelling a step response from Value{pre_step} down to Value{post_step} after tc samples
     // expecting flat Value{100}
@@ -68,7 +68,7 @@ void test_damper(Value pre_step = 100, Value post_step = 0, Count tc = 10) {
 }
 
 // User defined types
-TEST(Damper, Vec2) {
+TEST(Damper, Vec2) { // NOLINT
     auto d  = damper<Vec2>(4);
     auto dv = d({1, 0});
     EXPECT_EQ(dv, Vec2(1, 0));
@@ -81,36 +81,36 @@ TEST(Damper, Vec2) {
 }
 
 // signed integer types
-TEST(Damper, Short) { test_damper<short>(); }
-TEST(Damper, Int) { test_damper<int>(); }
-TEST(Damper, Long) { test_damper<long>(); }
-TEST(Damper, LongLong) { test_damper<long long>(); }
+TEST(Damper, Short) { test_damper<short>(); } // NOLINT
+TEST(Damper, Int) { test_damper<int>(); } // NOLINT
+TEST(Damper, Long) { test_damper<long>(); } // NOLINT
+TEST(Damper, LongLong) { test_damper<long long>(); } // NOLINT
 
 // signed integer types with a step from negative to positive
-TEST(Damper, ShortNegstep) { test_damper<short>(-100, 100); }
-TEST(Damper, IntNegstep) { test_damper<int>(-100, 100); }
-TEST(Damper, LongNegstep) { test_damper<long>(-100, 100); }
-TEST(Damper, LongLongNegstep) { test_damper<long long>(-100, 100); }
+TEST(Damper, ShortNegstep) { test_damper<short>(-100, 100); } // NOLINT
+TEST(Damper, IntNegstep) { test_damper<int>(-100, 100); } // NOLINT
+TEST(Damper, LongNegstep) { test_damper<long>(-100, 100); } // NOLINT
+TEST(Damper, LongLongNegstep) { test_damper<long long>(-100, 100); } // NOLINT
 
 // unsigned integer types
-TEST(Damper, UnsignedShort) { test_damper<unsigned short>(); }
-TEST(Damper, Unsigned) { test_damper<int>(-100, 100); }
-TEST(Damper, UnsignedLong) { test_damper<unsigned long>(); }
-TEST(Damper, UnsignedLongLong) { test_damper<unsigned long long>(); }
+TEST(Damper, UnsignedShort) { test_damper<unsigned short>(); } // NOLINT
+TEST(Damper, Unsigned) { test_damper<int>(-100, 100); } // NOLINT
+TEST(Damper, UnsignedLong) { test_damper<unsigned long>(); } // NOLINT
+TEST(Damper, UnsignedLongLong) { test_damper<unsigned long long>(); } // NOLINT
 
 // FP types
-TEST(Damper, Float) { test_damper<float>(); }
-TEST(Damper, Double) { test_damper<double>(); }
-TEST(Damper, LongDouble) { test_damper<long double>(); }
+TEST(Damper, Float) { test_damper<float>(); } // NOLINT
+TEST(Damper, Double) { test_damper<double>(); } // NOLINT
+TEST(Damper, LongDouble) { test_damper<long double>(); } // NOLINT
 
 // FP types with a step from negative to positive
-TEST(Damper, FloatNegstep) { test_damper<float>(-100.0, 100.0); }
-TEST(Damper, DoubleNegstep) { test_damper<double>(-100.0, 100.0); }
-TEST(Damper, LongDoubleNegstep) { test_damper<long double>(-100.0, 100.0); }
+TEST(Damper, FloatNegstep) { test_damper<float>(-100.0, 100.0); } // NOLINT
+TEST(Damper, DoubleNegstep) { test_damper<double>(-100.0, 100.0); } // NOLINT
+TEST(Damper, LongDoubleNegstep) { test_damper<long double>(-100.0, 100.0); } // NOLINT
 
 // tiny integer types (one use case is microcontroller analog input damping)
-TEST(Damper, Uint8Uint16) { test_damper<std::uint8_t, std::uint16_t>(); }
-TEST(Damper, Int8Int16) { test_damper<std::int8_t, std::int16_t>(); }
+TEST(Damper, Uint8Uint16) { test_damper<std::uint8_t, std::uint16_t>(); } // NOLINT
+TEST(Damper, Int8Int16) { test_damper<std::int8_t, std::int16_t>(); } // NOLINT
 
 // this test fails, because the sum overflows
 // I have tried to algebraically eliminate the sum, but it seems that, for integer arithmetic,
@@ -119,12 +119,12 @@ TEST(Damper, Int8Int16) { test_damper<std::int8_t, std::int16_t>(); }
 // std::uint8_t>(); }
 
 // however, it is still a valid set of template params when sample avg * tc is small
-TEST(Damper, Uint8Uint8SmallValues) {
+TEST(Damper, Uint8Uint8SmallValues) { // NOLINT
     test_damper<std::uint8_t, std::uint8_t, std::uint8_t>(0, 40, 5);
 }
 
-TEST(Damper, Int8Int8Int8Negstep) {
+TEST(Damper, Int8Int8Int8Negstep) { // NOLINT
     test_damper<std::int8_t, std::int8_t, std::int8_t>(-10, 10, 10);
 }
-TEST(Damper, IntIntNegstep) { test_damper<int, int>(-100'000, 100'000, 10); }
-TEST(Damper, Int8Int16Negstep) { test_damper<std::int8_t, std::int16_t>(-10, 10, short(10)); }
+TEST(Damper, IntIntNegstep) { test_damper<int, int>(-100'000, 100'000, 10); } // NOLINT
+TEST(Damper, Int8Int16Negstep) { test_damper<std::int8_t, std::int16_t>(-10, 10, short(10)); } // NOLINT

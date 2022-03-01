@@ -1,4 +1,5 @@
 #pragma once
+
 #include <algorithm>
 #include <exception>
 #include <numeric>
@@ -24,7 +25,8 @@ auto median_in_place(RandomAccessIter first, RandomAccessIter last, const Comp& 
 
   auto below_middle = std::ranges::max_element(first, middle, comp, proj);
 
-  return std::midpoint(std::invoke(proj, *middle), std::invoke(proj, *below_middle));
+  using std::midpoint; // allow users to provide their own midpoint
+  return midpoint(std::invoke(proj, *below_middle), std::invoke(proj, *middle));
 }
 
 template <typename RandomAcccessRange, typename Comp = std::less<>, typename Proj = std::identity>
@@ -37,7 +39,7 @@ auto median_in_place(RandomAcccessRange& range, const Comp& comp = {}, const Pro
 template <typename InputIter, typename Comp = std::ranges::less, typename Proj = std::identity>
 requires std::input_iterator<InputIter> &&
     std::sortable<typename std::vector<std::iter_value_t<InputIter>>::iterator, Comp, Proj>
-auto median(InputIter first, InputIter last, const Comp& comp = {}, const Proj& proj = {}) {
+auto median(const InputIter first, const InputIter last, const Comp& comp = {}, const Proj& proj = {}) {
   std::vector<std::iter_value_t<InputIter>> input_copy(first, last); // always make a copy
   return median_in_place(input_copy, comp, proj);
 }
