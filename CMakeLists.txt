@@ -18,6 +18,16 @@ else()
   string(APPEND CMAKE_CXX_FLAGS_RELWITHDEBINFO " -fsanitize=address,undefined,leak")
 endif()
 
+if (WIN32)
+  # combine everthing into one binary on windows
+  set(BUILD_SHARED_LIBS OFF)
+  # -static removes dependencies on libgcc.dll, libstdc++.dll and winthread.dll on windows
+  set(PROJECT_STATIC_OPTIONS "-static")
+else()
+  # on linux there is not much point being statically linked
+  set(PROJECT_STATIC_OPTIONS "")
+endif()
+
 set(SFML_BUILD_AUDIO OFF)
 set(SFML_BUILD_NETWORK OFF)
 add_subdirectory(SFML)
@@ -41,24 +51,19 @@ target_link_directories(imgui-sfml INTERFACE imgui-sfml/build)
 target_link_libraries(imgui-sfml INTERFACE ImGui-SFML sfml imgui)
 
 find_package(Threads REQUIRED)
-add_executable(softbody main.cpp include/video.cpp include/arial.cpp)
+add_executable(softbody main.cpp include/video.cpp include/arial.cpp include/point_png.cpp)
 target_include_directories(softbody PRIVATE include)
-if (WIN32)
-  # -static removes dependencies on libgcc.dll, libstdc++.dll and winthread.dll on windows
-  set(PROJECT_STATIC_OPTIONS "-static")
-else()
-  # on linux there is not much point being statically linked
-  set(PROJECT_STATIC_OPTIONS "")
-endif()
 target_link_libraries(softbody PRIVATE imgui-sfml ${PROJECT_STATIC_OPTIONS})
 target_compile_options(softbody PRIVATE ${PROJECT_COMPILE_OPTIONS})
 
+add_executable(dangling dangling.cpp)
+target_link_libraries(dangling PRIVATE imgui-sfml)
+
+add_executable(derived derived.cpp)
+
+add_executable(arch arch.cpp)
+target_link_libraries(arch PRIVATE imgui-sfml)
+
+add_subdirectory(test)
+
 # find_package(benchmark REQUIRED)
-
-find_package(PkgConfig)
-pkg_search_module(GTEST REQUIRED gtest_main)
-add_executable(avg_test avg_test.cpp)
-target_include_directories(avg_test PRIVATE include)
-target_link_libraries(avg_test ${GTEST_LDFLAGS})
-target_compile_options(avg_test PUBLIC ${GTEST_CFLAGS})
-
