@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <functional>
 #include <numeric>
 #include <ranges>
 #include <stdexcept>
